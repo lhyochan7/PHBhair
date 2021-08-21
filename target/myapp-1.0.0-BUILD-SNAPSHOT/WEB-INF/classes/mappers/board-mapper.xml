@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Board">
+	<insert id="insertBoard">
+		insert into travel (region, dates, visitedAreas, contents) values
+		(#{region} , #{dates} , #{visitedAreas} , #{contents})
+	</insert>
+	<update id="updateBoard">
+		update travel
+		set region=#{region}, contents=#{contents}, dates=#{dates},
+		visitedAreas=#{visitedAreas} where sid=#{sid}
+	</update>
+	<delete id="deleteBoard">
+		delete from travel where sid=#{sid}
+	</delete>
+	<select id="getBoard" resultType="board">
+		select * from travel where sid=#{sid}
+	</select>
+	<select id="getBoardList" resultType="board">
+		SELECT name, dong_name, street, contact_info
+		FROM hairshop.hairshop, address, contact
+		WHERE address.hairshopID = hairshop.hairshopID AND contact.hairshopID = hairshop.hairshopID
+	</select>
+	<select id="getList" parameterType="String" resultType="board">
+		select * from hairshop, address
+		where address.hairshopID = hairshop.hairshopID
+		ORDER BY hairshop.hairshopID ASC
+	</select>
+	<select id="getTop" parameterType="String" resultType="board">
+		SELECT hairshop.name, address.dong_name, address.street, contact.contact_info
+		FROM hairshop, address, contact, price
+		WHERE address.hairshopID = hairshop.hairshopID AND contact.hairshopID = hairshop.hairshopID AND hairshop.hairshopID = price.hairshopID
+		LIMIT 5
+	</select>
+	<select id="getResult" parameterType="Map" resultType="board">
+	SELECT DISTINCT(hairshop.name), address.dong_name, address.street, contact.contact_info, ROUND(AVG(review.rating),2) as rat
+         FROM hairshop, address, contact, price, business_hour, review
+         <where>
+         address.hairshopID = hairshop.hairshopID AND contact.hairshopID = hairshop.hairshopID AND hairshop.hairshopID = price.hairshopID AND hairshop.hairshopID = review.hairshopID
+         <if test = "dong_name != null">
+         AND address.dong_name = #{dong_name, jdbcType=VARCHAR}
+      </if>
+      <if test = "cut_m != null">
+         AND price.cut_m <![CDATA[<]]> #{cut_m}
+      </if>
+      <if test = "cut_f != null">
+         AND price.cut_f <![CDATA[<]]> #{cut_f}
+      </if>
+      <if test = "perm != null">
+         AND price.perm <![CDATA[<]]> #{perm}
+      </if>
+      <if test = "dyeing != null">
+         AND price.dyeing <![CDATA[<]]> #{dyeing}
+      </if>
+      <if test = "clinic != null">
+         AND price.clinic <![CDATA[<]]> #{clinic}
+      </if>
+      <if test = "rating != null">
+         AND review.rating = #{rating}
+      </if>
+      <if test = "hour != null and day != null">
+         AND business_hour.#{day}_start <![CDATA[<=]]> #{hour} <![CDATA[<=]]>business_hour.#{day}_end
+      </if>
+         </where>
+        GROUP BY hairshop.name, address.dong_name, address.street, contact.contact_info
+        ORDER BY rat DESC;
+	</select>
+</mapper>
+
